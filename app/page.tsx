@@ -192,8 +192,8 @@ export default function Home() {
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-base font-semibold text-slate-900">Latest Articles / Blog</h2>
-          <Link href="/blog" className="text-sm font-semibold text-teal-700 hover:text-teal-800">
+          <h2 className="text-base font-semibold text-slate-900">Latest Articles / Blogs</h2>
+          <Link href="/blogs" className="text-sm font-semibold text-teal-700 hover:text-teal-800">
             View all
           </Link>
         </div>

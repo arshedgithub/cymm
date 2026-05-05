@@ -35,12 +35,12 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    label: "Blog",
-    href: "/blog",
+    label: "Blogs",
+    href: "/blogs",
     children: [
-      { label: "Daily Reminders", href: "/blog/daily-reminders", icon: "reminders" },
-      { label: "Benefits", href: "/blog/benefits", icon: "benefits" },
-      { label: "Articles", href: "/blog/articles", icon: "articles" },
+      { label: "Daily Reminders", href: "/blogs/daily-reminders", icon: "reminders" },
+      { label: "Benefits", href: "/blogs/benefits", icon: "benefits" },
+      { label: "Articles", href: "/blogs/articles", icon: "articles" },
     ],
   },
   { label: "About", href: "/about" },
