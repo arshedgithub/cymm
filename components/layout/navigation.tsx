@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { navItems } from "@/config/navigation";
+
+const LANGS = [
+  { key: "en", short: "EN",  full: "English"  },
+  { key: "si", short: "සිං", full: "සිංහල"   },
+  { key: "ta", short: "தமி", full: "தமிழ்"    },
+] as const;
+type LangKey = (typeof LANGS)[number]["key"];
 
 const isArabic = (str: string) => /[\u0600-\u06FF]/.test(str);
 
@@ -59,6 +66,20 @@ export default function Navigation() {
     null,
   );
   const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [lang, setLang] = useState<LangKey>("en");
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   const toggleExpand = (label: string) => {
     setExpandedItem((current) => (current === label ? null : label));
@@ -141,6 +162,37 @@ export default function Navigation() {
               })}
             </nav>
 
+            {/* Language dropdown */}
+            <div ref={langRef} className="relative ml-2">
+              <button
+                type="button"
+                onClick={() => setLangOpen((o) => !o)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                {LANGS.find((l) => l.key === lang)?.short}
+                <svg viewBox="0 0 20 20" fill="currentColor" className={`h-3.5 w-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`}>
+                  <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {langOpen ? (
+                <div className="absolute right-0 top-full mt-1.5 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl" style={{ zIndex: 200 }}>
+                  {LANGS.map((l) => (
+                    <button
+                      key={l.key}
+                      type="button"
+                      onClick={() => { setLang(l.key); setLangOpen(false); }}
+                      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition hover:bg-slate-50 ${
+                        lang === l.key ? "font-semibold text-[var(--brand-primary)]" : "text-slate-700"
+                      }`}
+                    >
+                      <span className="w-8 font-medium">{l.short}</span>
+                      <span className="text-slate-500">{l.full}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
             <Link
               href="/donate"
               className="ml-2 inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
@@ -179,12 +231,21 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* ── Desktop hover subpanel ── */}
+      {/* ── Desktop hover subpanel (absolute overlay) ── */}
       {activeDesktopItem ? (
-        <div
-          className="hidden border-b border-slate-200 bg-white shadow-lg md:block"
-          onMouseEnter={() => handleDesktopEnter(activeDesktopItem.label)}
-        >
+        <>
+          {/* Translucent backdrop — covers page content below navbar */}
+          <div
+            className="fixed left-0 right-0 hidden md:block"
+            style={{ top: "64px", bottom: 0, backgroundColor: "rgba(15,23,42,0.25)", zIndex: 45 }}
+            onClick={() => setActiveDesktopGroup(null)}
+          />
+          {/* Panel */}
+          <div
+            className="absolute left-0 right-0 top-full hidden border-b border-slate-200 bg-white shadow-xl md:block"
+            style={{ zIndex: 51 }}
+            onMouseEnter={() => handleDesktopEnter(activeDesktopItem.label)}
+          >
           <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">
@@ -192,6 +253,7 @@ export default function Navigation() {
               </p>
               <Link
                 href={activeDesktopItem.href}
+                onClick={() => setActiveDesktopGroup(null)}
                 className="text-xs font-semibold text-slate-400 hover:text-[var(--brand-primary)]"
               >
                 Browse all &rarr;
@@ -202,6 +264,7 @@ export default function Navigation() {
                 <Link
                   key={child.label}
                   href={child.href}
+                  onClick={() => setActiveDesktopGroup(null)}
                   className="group flex flex-col items-center gap-2 text-center transition"
                 >
                   <span
@@ -225,12 +288,31 @@ export default function Navigation() {
               ))}
             </div>
           </div>
-        </div>
+          </div>
+        </>
       ) : null}
 
       {/* ── Mobile menu ── */}
       {mobileOpen ? (
         <div className="border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+          {/* Language switcher */}
+          <div className="mb-3 flex items-center gap-1.5 rounded-xl border border-slate-200 p-1">
+            {LANGS.map((l) => (
+              <button
+                key={l.key}
+                type="button"
+                onClick={() => setLang(l.key)}
+                className={`flex-1 rounded-lg py-1.5 text-sm font-medium transition ${
+                  lang === l.key
+                    ? "bg-[var(--brand-primary)] text-white"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {l.short}
+              </button>
+            ))}
+          </div>
+
           <ul className="space-y-1">
             {navItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
